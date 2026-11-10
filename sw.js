@@ -3,7 +3,7 @@
    Production-grade caching, offline support & PWA lifecycle
    ============================================================ */
 
-const CACHE_VERSION = 'lumen-pwa-v3';
+const CACHE_VERSION = 'lumen-pwa-v4';
 const CORE_ASSETS = [
   './',
   './index.html',

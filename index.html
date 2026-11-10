@@ -133,10 +133,16 @@
         <span>শিরোনাম</span>
         <input type="text" id="paperTitle" value="HSC বিজ্ঞান — MCQ ও সৃজনশীল প্রশ্নপত্র">
       </label>
-      <label class="field">
-        <span>প্রতিষ্ঠানের নাম (ঐচ্ছিক)</span>
-        <input type="text" id="institution" placeholder="যেমন: শহীদ স্মৃতি কলেজ">
-      </label>
+      <div class="two-fields">
+        <label class="field">
+          <span>প্রতিষ্ঠানের নাম (ঐচ্ছিক)</span>
+          <input type="text" id="institution" placeholder="যেমন: শহীদ স্মৃতি কলেজ">
+        </label>
+        <label class="field">
+          <span>লোগো (ঐচ্ছিক)</span>
+          <input type="file" id="institutionLogo" accept="image/*">
+        </label>
+      </div>
       <div class="two-fields">
         <label class="field">
           <span>সময়</span>
@@ -161,6 +167,14 @@
           <p>উত্তরপত্র ও উৎস</p>
         </div>
       </div>
+      <label class="toggle-row">
+        <input type="checkbox" id="compactMode">
+        <span>কমপ্যাক্ট মোড (১-২ পৃষ্ঠায় ফিট / পৃষ্ঠা সাশ্রয়ী)</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="showOmrSheet">
+        <span>খালি OMR উত্তরপত্র শিট প্রিন্ট করুন</span>
+      </label>
       <label class="toggle-row">
         <input type="checkbox" id="showMcqKey" checked>
         <span>MCQ উত্তরপত্র দেখাও</span>
@@ -190,6 +204,9 @@
     <div class="preview-toolbar no-print">
       <div class="preview-status" id="previewStatus">বিষয় নির্বাচন করে “প্রশ্নপত্র তৈরি করুন” চাপুন</div>
       <div class="preview-actions">
+        <button type="button" class="tool-btn" id="savedPapersBtn" title="পূর্বে সংরক্ষিত প্রশ্নপত্রসমূহ">📂 সংরক্ষিত</button>
+        <button type="button" class="tool-btn" id="savePaperBtn" disabled title="বর্তমান প্রশ্নপত্র সেভ করুন">💾 সেভ</button>
+        <button type="button" class="tool-btn" id="makeSetsBtn" disabled title="Set A, B, C, D ৪টি সেট তৈরি করুন">🔀 ৪ সেট</button>
         <button type="button" class="tool-btn" id="regenerateBtn" disabled>আবার তৈরি</button>
         <button type="button" class="tool-btn primary" id="printBtn" disabled>প্রিন্ট / PDF</button>
       </div>
@@ -204,6 +221,23 @@
     </div>
   </section>
 </main>
+
+<div class="picker-overlay hidden" id="savedModal">
+  <div class="picker" style="max-width: 650px;">
+    <header class="picker-head">
+      <div>
+        <h2>💾 সংরক্ষিত প্রশ্নপত্রসমূহ</h2>
+        <p>পূর্বে সেভ করা প্রশ্নপত্র লোড বা প্রিন্ট করুন</p>
+      </div>
+      <button type="button" class="picker-close" id="savedModalClose" aria-label="বন্ধ করুন">✕</button>
+    </header>
+    <div class="picker-body" style="padding: 16px;">
+      <div id="savedList" class="saved-list">
+        <p class="empty-text">কোনো সংরক্ষিত প্রশ্নপত্র নেই। প্রশ্নপত্র তৈরি করে "💾 সেভ" বাটনে চাপুন।</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="picker-overlay hidden" id="pickerOverlay">
   <div class="picker">

@@ -63,6 +63,7 @@ const state = {
   lastTotalMarks: 0,
   lastSettings: null,
   lastMode: null,
+  institutionLogo: localStorage.getItem('lumen_logo') || null,
   picked: new Map(),
   picker: {
     subject: null,
@@ -1000,7 +1001,9 @@ function readSettings() {
     showMcqKey: $('showMcqKey').checked,
     showMcqExplanation: $('showMcqExplanation').checked,
     showCqAnswers: $('showCqAnswers').checked,
-    showSource: $('showSource').checked
+    showSource: $('showSource').checked,
+    compactMode: $('compactMode')?.checked || false,
+    showOmrSheet: $('showOmrSheet')?.checked || false
   };
 }
 
@@ -1177,6 +1180,10 @@ function renderMcqItem(q, index, settings) {
 
   return `
     <div class="mcq-item" data-subject="${esc(q.subject || '')}" data-chapter="${esc(q.chapter || '')}" data-id="${esc(q.id || '')}">
+      <div class="q-actions no-print">
+        <button type="button" class="q-act-btn swap" title="এই প্রশ্ন পরিবর্তন করুন" onclick="swapQuestion('mcq', ${index})">🔄 বদলান</button>
+        <button type="button" class="q-act-btn delete" title="এই প্রশ্ন বাদ দিন" onclick="deleteQuestion('mcq', ${index})">✕ বাদ</button>
+      </div>
       <div class="q-line">
         <span class="q-num">${toBn(index + 1)}.</span>
         <div class="q-body">
@@ -1205,6 +1212,10 @@ function renderCqItem(q, index, settings) {
 
   return `
     <div class="cq-item" data-subject="${esc(q.subject || '')}" data-chapter="${esc(q.chapter || '')}" data-id="${esc(q.id || '')}">
+      <div class="q-actions no-print">
+        <button type="button" class="q-act-btn swap" title="এই সৃজনশীল প্রশ্ন পরিবর্তন করুন" onclick="swapQuestion('cq', ${index})">🔄 বদলান</button>
+        <button type="button" class="q-act-btn delete" title="এই সৃজনশীল প্রশ্ন বাদ দিন" onclick="deleteQuestion('cq', ${index})">✕ বাদ</button>
+      </div>
       <div class="cq-stem">
         <span class="q-num">${toBn(index + 1)}.</span>
         <div class="cq-stem-body">
@@ -1249,6 +1260,9 @@ function buildHeaderHtml(settings, subjects, totalMarks) {
   const subjectLine = subjects.map((s) => SUBJECT_BN[s] || s).join(', ');
 
   let html = '<div class="paper-header">';
+  if (state.institutionLogo) {
+    html += `<div class="paper-logo-wrap"><img src="${state.institutionLogo}" class="paper-logo" alt="Logo"></div>`;
+  }
   if (settings.institution) {
     html += `<div class="paper-institution">${esc(settings.institution)}</div>`;
   }
@@ -1266,18 +1280,70 @@ function buildHeaderHtml(settings, subjects, totalMarks) {
   return html;
 }
 
+function renderOmrSheetHtml(count, settings) {
+  const max = Math.min(count || 30, 100);
+  let rowsHtml = '';
+  for (let i = 0; i < max; i++) {
+    rowsHtml += `
+      <div class="omr-row">
+        <span class="omr-row-num">${toBn(i + 1)}.</span>
+        <div class="omr-bubbles">
+          <span class="omr-bubble">ক</span>
+          <span class="omr-bubble">খ</span>
+          <span class="omr-bubble">গ</span>
+          <span class="omr-bubble">ঘ</span>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="omr-sheet">
+      <div class="omr-head">
+        <div>
+          <div class="omr-title">OMR উত্তরপত্র (বহুনির্বাচনি)</div>
+          <small style="color:#64748b;">কালো বলপেন দিয়ে বৃত্ত সম্পূর্ণ ভরাট করো</small>
+        </div>
+        <div class="omr-boxes">
+          <div class="omr-box">
+            <span>রোল নম্বর</span>
+            <div class="box-row">
+              <span class="box-cell"></span><span class="box-cell"></span><span class="box-cell"></span>
+              <span class="box-cell"></span><span class="box-cell"></span><span class="box-cell"></span>
+            </div>
+          </div>
+          <div class="omr-box">
+            <span>রেজিস্ট্রেশন নম্বর</span>
+            <div class="box-row">
+              <span class="box-cell"></span><span class="box-cell"></span><span class="box-cell"></span>
+              <span class="box-cell"></span><span class="box-cell"></span><span class="box-cell"></span>
+            </div>
+          </div>
+          <div class="omr-box">
+            <span>সেট</span>
+            <div class="box-row"><span class="box-cell" style="width:24px;text-align:center;font-size:8pt;line-height:18px;">${esc(settings.set || 'A')}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="omr-grid">
+        ${rowsHtml}
+      </div>
+    </div>
+  `;
+}
+
 function renderPaper(mcqs, cqs, settings, subjects) {
   const cqTotalMarks = cqs.reduce((sum, q) => sum + cqMarks(q, state.lastSubjects?.[0] || ''), 0);
   const totalMarks = mcqs.length + cqTotalMarks;
 
   let html = buildHeaderHtml(settings, subjects, totalMarks);
 
-if (mcqs.length) {
+  if (mcqs.length) {
     html += `<div class="section-title">
       <span>ক-বিভাগ: বহুনির্বাচনি প্রশ্ন (MCQ)</span>
       <small>${toBn(mcqs.length)}টি প্রশ্ন · ${toBn(mcqs.length)} নম্বর</small>
     </div>`;
-    html += '<div class="section-note">সঠিক উত্তরটি নির্বাচন করো。</div>';
+    html += '<div class="section-note">সঠিক উত্তরটি নির্বাচন করো।</div>';
     html += `<div class="mcq-two-col">${mcqs.map((q, i) => renderMcqItem(q, i, settings)).join('')}</div>`;
   }
 
@@ -1288,6 +1354,10 @@ if (mcqs.length) {
     </div>`;
     html += '<div class="section-note">প্রতিটি প্রশ্নের ক, খ, গ ও ঘ অংশের উত্তর দাও।</div>';
     html += cqs.map((q, i) => renderCqItem(q, i, settings)).join('');
+  }
+
+  if (settings.showOmrSheet && mcqs.length) {
+    html += renderOmrSheetHtml(mcqs.length, settings);
   }
 
   if (settings.showMcqKey && mcqs.length) {
@@ -1324,11 +1394,20 @@ if (mcqs.length) {
   }
 
   const paper = $('paper');
+  if (settings.compactMode) {
+    paper.classList.add('compact-mode');
+  } else {
+    paper.classList.remove('compact-mode');
+  }
+
   paper.innerHTML = html;
 
   renderMath(paper);
 
   paper.dataset.gen = String(Date.now());
+
+  if ($('savePaperBtn')) $('savePaperBtn').disabled = false;
+  if ($('makeSetsBtn')) $('makeSetsBtn').disabled = false;
 }
 
 function updatePaperHeader() {
@@ -1515,10 +1594,288 @@ document.addEventListener('DOMContentLoaded', () => {
     $(id).addEventListener('input', updatePaperHeader);
   });
 
+  $('institutionLogo')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        state.institutionLogo = evt.target.result;
+        try { localStorage.setItem('lumen_logo', state.institutionLogo); } catch(_) {}
+        updatePaperHeader();
+        toast('প্রতিষ্ঠানের লোগো যুক্ত করা হয়েছে');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  $('compactMode')?.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      $('paper').classList.add('compact-mode');
+    } else {
+      $('paper').classList.remove('compact-mode');
+    }
+  });
+
+  $('showOmrSheet')?.addEventListener('change', () => {
+    if (state.lastMcqs.length || state.lastCqs.length) {
+      renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
+    }
+  });
+
+  $('makeSetsBtn')?.addEventListener('click', generate4Sets);
+  $('savePaperBtn')?.addEventListener('click', saveCurrentPaper);
+  $('savedPapersBtn')?.addEventListener('click', openSavedModal);
+  $('savedModalClose')?.addEventListener('click', closeSavedModal);
+  $('savedModal')?.addEventListener('click', (e) => {
+    if (e.target === $('savedModal')) closeSavedModal();
+  });
+
   updatePickSummary();
   loadMeta();
   setupPwa();
 });
+
+/* ---------------- Swap & Delete Question ---------------- */
+
+window.swapQuestion = async function(type, index) {
+  if (type === 'mcq') {
+    const currentQ = state.lastMcqs[index];
+    if (!currentQ) return;
+    const currentIds = new Set(state.lastMcqs.map((q) => String(q.id)));
+
+    let candidate = null;
+    for (const [key, val] of state.cache.entries()) {
+      const pool = Array.isArray(val) ? val : (val.mcqs || []);
+      const available = pool.filter((q) => q && !currentIds.has(String(q.id)));
+      if (available.length) {
+        candidate = available[Math.floor(Math.random() * available.length)];
+        break;
+      }
+    }
+
+    if (candidate) {
+      state.lastMcqs[index] = candidate;
+      renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
+      toast(`প্রশ্ন #${toBn(index + 1)} নতুন প্রশ্ন দ্বারা পরিবর্তন করা হয়েছে`);
+    } else {
+      toast('অন্য কোনো প্রশ্ন পাওয়া যায়নি', true);
+    }
+  } else if (type === 'cq') {
+    const currentQ = state.lastCqs[index];
+    if (!currentQ) return;
+    const currentIds = new Set(state.lastCqs.map((q) => String(q.id)));
+
+    let candidate = null;
+    for (const [key, val] of state.cache.entries()) {
+      const pool = Array.isArray(val) ? val : (val.cqs || []);
+      const available = pool.filter((q) => q && !currentIds.has(String(q.id)));
+      if (available.length) {
+        candidate = available[Math.floor(Math.random() * available.length)];
+        break;
+      }
+    }
+
+    if (candidate) {
+      state.lastCqs[index] = candidate;
+      renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
+      toast(`সৃজনশীল #${toBn(index + 1)} পরিবর্তন করা হয়েছে`);
+    } else {
+      toast('অন্য কোনো সৃজনশীল প্রশ্ন পাওয়া যায়নি', true);
+    }
+  }
+};
+
+window.deleteQuestion = function(type, index) {
+  if (type === 'mcq') {
+    if (state.lastMcqs.length <= 1) {
+      toast('অন্তত একটি প্রশ্ন থাকতে হবে', true);
+      return;
+    }
+    state.lastMcqs.splice(index, 1);
+    renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
+    $('previewStatus').textContent = `তৈরি হয়েছে: ${toBn(state.lastMcqs.length)} MCQ · ${toBn(state.lastCqs.length)} CQ`;
+    toast(`প্রশ্ন #${toBn(index + 1)} বাদ দেওয়া হয়েছে`);
+  } else if (type === 'cq') {
+    state.lastCqs.splice(index, 1);
+    renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
+    $('previewStatus').textContent = `তৈরি হয়েছে: ${toBn(state.lastMcqs.length)} MCQ · ${toBn(state.lastCqs.length)} CQ`;
+    toast(`সৃজনশীল #${toBn(index + 1)} বাদ দেওয়া হয়েছে`);
+  }
+};
+
+/* ---------------- 4 Sets Generator ---------------- */
+
+function generate4Sets() {
+  if (!state.lastMcqs.length && !state.lastCqs.length) {
+    toast('আগে প্রশ্নপত্র তৈরি করুন', true);
+    return;
+  }
+
+  const setNames = ['Set A (ক)', 'Set B (খ)', 'Set C (গ)', 'Set D (ঘ)'];
+  const baseMcqs = [...state.lastMcqs];
+  const baseCqs = [...state.lastCqs];
+  const baseSettings = readSettings();
+  const subjects = state.lastSubjects;
+
+  let combinedHtml = '';
+
+  setNames.forEach((setName, setIdx) => {
+    const shuffledMcqs = setIdx === 0 ? baseMcqs : shuffle(baseMcqs).map((q) => {
+      if (!Array.isArray(q.options) || q.options.length < 2) return q;
+      const originalAns = q.options[getAnswerIndex(q)];
+      const shuffledOpts = shuffle(q.options);
+      const newAnsIndex = shuffledOpts.indexOf(originalAns);
+      return {
+        ...q,
+        options: shuffledOpts,
+        answer: newAnsIndex >= 0 ? newAnsIndex : q.answer
+      };
+    });
+
+    const shuffledCqs = setIdx === 0 ? baseCqs : shuffle(baseCqs);
+    const setSettings = { ...baseSettings, set: setName };
+    const cqTotalMarks = shuffledCqs.reduce((sum, q) => sum + cqMarks(q, subjects[0] || ''), 0);
+    const totalMarks = shuffledMcqs.length + cqTotalMarks;
+
+    if (setIdx > 0) {
+      combinedHtml += '<div class="page-break" style="margin: 36px 0; border-top: 3px dashed #94a3b8; padding-top: 24px;"></div>';
+    }
+
+    combinedHtml += `<div class="set-block" data-set="${setName}">`;
+    combinedHtml += buildHeaderHtml(setSettings, subjects, totalMarks);
+
+    if (shuffledMcqs.length) {
+      combinedHtml += `<div class="section-title">
+        <span>ক-বিভাগ: বহুনির্বাচনি প্রশ্ন (MCQ) — ${setName}</span>
+        <small>${toBn(shuffledMcqs.length)}টি প্রশ্ন · ${toBn(shuffledMcqs.length)} নম্বর</small>
+      </div>`;
+      combinedHtml += `<div class="mcq-two-col">${shuffledMcqs.map((q, i) => renderMcqItem(q, i, setSettings)).join('')}</div>`;
+    }
+
+    if (shuffledCqs.length) {
+      combinedHtml += `<div class="section-title">
+        <span>খ-বিভাগ: সৃজনশীল প্রশ্ন (CQ) — ${setName}</span>
+        <small>${toBn(shuffledCqs.length)}টি প্রশ্ন · ${toBn(cqTotalMarks)} নম্বর</small>
+      </div>`;
+      combinedHtml += shuffledCqs.map((q, i) => renderCqItem(q, i, setSettings)).join('');
+    }
+
+    if (baseSettings.showMcqKey && shuffledMcqs.length) {
+      combinedHtml += '<div class="page-break"></div>';
+      combinedHtml += '<div class="key-section">';
+      combinedHtml += `<div class="key-title">উত্তরপত্র (${setName} Answer Key)</div>`;
+      combinedHtml += `<div class="key-grid">${renderMcqKey(shuffledMcqs)}</div>`;
+      combinedHtml += '</div>';
+    }
+
+    combinedHtml += '</div>';
+  });
+
+  const paper = $('paper');
+  paper.innerHTML = combinedHtml;
+  renderMath(paper);
+  toast('Set A, B, C, D চারটি সেট সফলভাবে তৈরি হয়েছে!');
+  $('previewStatus').textContent = '৪টি সেট (Set A, B, C, D) প্রস্তুত';
+}
+
+/* ---------------- Saved Papers Management ---------------- */
+
+function saveCurrentPaper() {
+  if (!state.lastMcqs.length && !state.lastCqs.length) {
+    toast('আগে প্রশ্নপত্র তৈরি করুন', true);
+    return;
+  }
+
+  const saved = JSON.parse(localStorage.getItem('lumen_saved_papers') || '[]');
+  const newEntry = {
+    id: 'paper_' + Date.now(),
+    date: new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    title: $('paperTitle').value || 'প্রশ্নপত্র',
+    institution: $('institution').value || '',
+    subjects: state.lastSubjects,
+    settings: readSettings(),
+    mcqs: state.lastMcqs,
+    cqs: state.lastCqs
+  };
+
+  saved.unshift(newEntry);
+  if (saved.length > 25) saved.pop();
+  try {
+    localStorage.setItem('lumen_saved_papers', JSON.stringify(saved));
+    toast('প্রশ্নপত্র সফলভাবে সেভ করা হয়েছে! 💾');
+  } catch (err) {
+    toast('মেমোরি পূর্ণ হতে পারে', true);
+  }
+}
+
+function openSavedModal() {
+  const modal = $('savedModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  renderSavedList();
+}
+
+function closeSavedModal() {
+  const modal = $('savedModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderSavedList() {
+  const list = $('savedList');
+  if (!list) return;
+  const saved = JSON.parse(localStorage.getItem('lumen_saved_papers') || '[]');
+  if (!saved.length) {
+    list.innerHTML = '<p class="empty-text">কোনো সংরক্ষিত প্রশ্নপত্র নেই। প্রশ্নপত্র তৈরি করে "💾 সেভ" বাটনে চাপুন।</p>';
+    return;
+  }
+
+  list.innerHTML = saved.map((item) => `
+    <div class="saved-item">
+      <div>
+        <div class="saved-item-title">${esc(item.title)}</div>
+        <div class="saved-item-meta">${esc(item.institution ? item.institution + ' · ' : '')}${toBn(item.mcqs?.length || 0)} MCQ, ${toBn(item.cqs?.length || 0)} CQ · ${esc(item.date)}</div>
+      </div>
+      <div class="saved-item-actions">
+        <button type="button" class="tool-btn primary" onclick="loadSavedPaper('${item.id}')">লোড</button>
+        <button type="button" class="tool-btn" onclick="deleteSavedPaper('${item.id}')" style="color:#dc2626;">মুছুন</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.loadSavedPaper = function(id) {
+  const saved = JSON.parse(localStorage.getItem('lumen_saved_papers') || '[]');
+  const item = saved.find((p) => p.id === id);
+  if (!item) return;
+
+  state.lastMcqs = item.mcqs || [];
+  state.lastCqs = item.cqs || [];
+  state.lastSubjects = item.subjects || [];
+  state.lastSettings = item.settings || readSettings();
+
+  if (item.settings) {
+    if ($('paperTitle')) $('paperTitle').value = item.settings.title || '';
+    if ($('institution')) $('institution').value = item.settings.institution || '';
+    if ($('examTime')) $('examTime').value = item.settings.examTime || '';
+    if ($('paperSet')) $('paperSet').value = item.settings.set || '';
+    if ($('instructions')) $('instructions').value = item.settings.instructions || '';
+  }
+
+  renderPaper(state.lastMcqs, state.lastCqs, state.lastSettings, state.lastSubjects);
+  closeSavedModal();
+  $('previewStatus').textContent = `লোড হয়েছে: ${toBn(state.lastMcqs.length)} MCQ · ${toBn(state.lastCqs.length)} CQ`;
+  $('printBtn').disabled = false;
+  $('regenerateBtn').disabled = false;
+  toast('সংরক্ষিত প্রশ্নপত্র সফলভাবে লোড হয়েছে');
+};
+
+window.deleteSavedPaper = function(id) {
+  let saved = JSON.parse(localStorage.getItem('lumen_saved_papers') || '[]');
+  saved = saved.filter((p) => p.id !== id);
+  localStorage.setItem('lumen_saved_papers', JSON.stringify(saved));
+  renderSavedList();
+  toast('প্রশ্নপত্র মুছে ফেলা হয়েছে');
+};
 
 /* ---------------- Mobile Tabs & PWA ---------------- */
 

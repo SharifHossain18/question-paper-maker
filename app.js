@@ -619,7 +619,11 @@ async function collect(refs, type, needed, label, minFiles) {
       const data = await loadChapter(ref.subject, ref.chapter.id, type);
       if (Array.isArray(data)) {
         data.forEach((q) => {
-          if (type === 'mcq' ? isValidMcq(q) : isValidCq(q)) pool.push(q);
+          if (type === 'mcq' ? isValidMcq(q) : isValidCq(q)) {
+            q._subject = ref.subject;
+            q._chapterId = ref.chapter.id;
+            pool.push(q);
+          }
         });
       }
     } catch (err) {
@@ -990,6 +994,7 @@ function generateFromPicked() {
 /* ---------------- Generation ---------------- */
 
 function readSettings() {
+  const optionsLayout = document.querySelector('input[name="optionsLayout"]:checked')?.value || 'grid';
   return {
     title: $('paperTitle').value.trim() || 'HSC প্রশ্নপত্র',
     institution: $('institution').value.trim(),
@@ -1003,7 +1008,9 @@ function readSettings() {
     showCqAnswers: $('showCqAnswers').checked,
     showSource: $('showSource').checked,
     compactMode: $('compactMode')?.checked || false,
-    showOmrSheet: $('showOmrSheet')?.checked || false
+    optionsLayout: optionsLayout,
+    showOmrSheet: $('showOmrSheet')?.checked || false,
+    showWatermark: $('showWatermark')?.checked || false
   };
 }
 
@@ -1169,6 +1176,7 @@ function sourceLabel(q) {
 function renderMcqItem(q, index, settings) {
   const options = Array.isArray(q.options) ? q.options : [];
   const source = settings.showSource ? sourceLabel(q) : '';
+  const isInline = settings.optionsLayout === 'inline';
 
   const optionsHtml = options.map((opt, i) => {
     const label = OPTION_LABELS[i] || String.fromCharCode(65 + i);
@@ -1179,10 +1187,10 @@ function renderMcqItem(q, index, settings) {
   }).join('');
 
   return `
-    <div class="mcq-item" data-subject="${esc(q.subject || '')}" data-chapter="${esc(q.chapter || '')}" data-id="${esc(q.id || '')}">
+    <div class="mcq-item" data-subject="${esc(q._subject || q.subject || '')}" data-chapter="${esc(q._chapterId || q.chapter || '')}" data-id="${esc(q.id || '')}">
       <div class="q-actions no-print">
-        <button type="button" class="q-act-btn swap" title="এই প্রশ্ন পরিবর্তন করুন" onclick="swapQuestion('mcq', ${index})">🔄 বদলান</button>
-        <button type="button" class="q-act-btn delete" title="এই প্রশ্ন বাদ দিন" onclick="deleteQuestion('mcq', ${index})">✕ বাদ</button>
+        <button type="button" class="q-act-btn swap" title="একই অধ্যায় থেকে প্রশ্নটি পরিবর্তন করুন" onclick="swapQuestion('mcq', ${index})">🔄 পরিবর্তন</button>
+        <button type="button" class="q-act-btn delete" title="এই প্রশ্নটি বাদ দিন" onclick="deleteQuestion('mcq', ${index})">✕ বাদ দিন</button>
       </div>
       <div class="q-line">
         <span class="q-num">${toBn(index + 1)}.</span>
@@ -1191,7 +1199,7 @@ function renderMcqItem(q, index, settings) {
           ${source ? `<span class="source-tag">[${esc(source)}]</span>` : ''}
         </div>
       </div>
-      <div class="options">${optionsHtml}</div>
+      <div class="options ${isInline ? 'inline-layout' : ''}">${optionsHtml}</div>
     </div>`;
 }
 
@@ -1211,10 +1219,10 @@ function renderCqItem(q, index, settings) {
   }).join('');
 
   return `
-    <div class="cq-item" data-subject="${esc(q.subject || '')}" data-chapter="${esc(q.chapter || '')}" data-id="${esc(q.id || '')}">
+    <div class="cq-item" data-subject="${esc(q._subject || q.subject || '')}" data-chapter="${esc(q._chapterId || q.chapter || '')}" data-id="${esc(q.id || '')}">
       <div class="q-actions no-print">
-        <button type="button" class="q-act-btn swap" title="এই সৃজনশীল প্রশ্ন পরিবর্তন করুন" onclick="swapQuestion('cq', ${index})">🔄 বদলান</button>
-        <button type="button" class="q-act-btn delete" title="এই সৃজনশীল প্রশ্ন বাদ দিন" onclick="deleteQuestion('cq', ${index})">✕ বাদ</button>
+        <button type="button" class="q-act-btn swap" title="একই অধ্যায় থেকে সৃজনশীল প্রশ্ন পরিবর্তন করুন" onclick="swapQuestion('cq', ${index})">🔄 পরিবর্তন</button>
+        <button type="button" class="q-act-btn delete" title="এই সৃজনশীল প্রশ্ন বাদ দিন" onclick="deleteQuestion('cq', ${index})">✕ বাদ দিন</button>
       </div>
       <div class="cq-stem">
         <span class="q-num">${toBn(index + 1)}.</span>
@@ -1259,7 +1267,18 @@ function renderCqAnswers(cqs) {
 function buildHeaderHtml(settings, subjects, totalMarks) {
   const subjectLine = subjects.map((s) => SUBJECT_BN[s] || s).join(', ');
 
-  let html = '<div class="paper-header">';
+  let watermarkHtml = '';
+  if (settings.showWatermark) {
+    if (state.institutionLogo) {
+      watermarkHtml = `<div class="paper-watermark"><img src="${state.institutionLogo}" class="paper-watermark-img" alt="Watermark"></div>`;
+    } else if (settings.institution) {
+      watermarkHtml = `<div class="paper-watermark"><div class="paper-watermark-text">${esc(settings.institution)}</div></div>`;
+    } else {
+      watermarkHtml = `<div class="paper-watermark"><div class="paper-watermark-text">LUMEN</div></div>`;
+    }
+  }
+
+  let html = watermarkHtml + '<div class="paper-header">';
   if (state.institutionLogo) {
     html += `<div class="paper-logo-wrap"><img src="${state.institutionLogo}" class="paper-logo" alt="Logo"></div>`;
   }
@@ -1601,6 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.onload = (evt) => {
         state.institutionLogo = evt.target.result;
         try { localStorage.setItem('lumen_logo', state.institutionLogo); } catch(_) {}
+        updateLogoState();
         updatePaperHeader();
         toast('প্রতিষ্ঠানের লোগো যুক্ত করা হয়েছে');
       };
@@ -1608,11 +1628,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const updateLogoState = () => {
+    const removeBtn = $('removeLogoBtn');
+    if (!removeBtn) return;
+    removeBtn.style.display = state.institutionLogo ? 'inline-block' : 'none';
+  };
+  updateLogoState();
+
+  $('removeLogoBtn')?.addEventListener('click', () => {
+    state.institutionLogo = null;
+    try { localStorage.removeItem('lumen_logo'); } catch(_) {}
+    if ($('institutionLogo')) $('institutionLogo').value = '';
+    updateLogoState();
+    updatePaperHeader();
+    toast('লোগো মুছে ফেলা হয়েছে');
+  });
+
   $('compactMode')?.addEventListener('change', (e) => {
     if (e.target.checked) {
       $('paper').classList.add('compact-mode');
     } else {
       $('paper').classList.remove('compact-mode');
+    }
+  });
+
+  document.querySelectorAll('input[name="optionsLayout"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (state.lastMcqs.length) {
+        renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
+      }
+    });
+  });
+
+  $('showWatermark')?.addEventListener('change', () => {
+    if (state.lastMcqs.length || state.lastCqs.length) {
+      updatePaperHeader();
     }
   });
 
@@ -1635,53 +1685,62 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPwa();
 });
 
-/* ---------------- Swap & Delete Question ---------------- */
+/* ---------------- Swap & Delete Question (একই অধ্যায় থেকে) ---------------- */
 
 window.swapQuestion = async function(type, index) {
-  if (type === 'mcq') {
-    const currentQ = state.lastMcqs[index];
-    if (!currentQ) return;
-    const currentIds = new Set(state.lastMcqs.map((q) => String(q.id)));
+  const currentList = type === 'mcq' ? state.lastMcqs : state.lastCqs;
+  const currentQ = currentList[index];
+  if (!currentQ) return;
 
-    let candidate = null;
-    for (const [key, val] of state.cache.entries()) {
-      const pool = Array.isArray(val) ? val : (val.mcqs || []);
-      const available = pool.filter((q) => q && !currentIds.has(String(q.id)));
-      if (available.length) {
-        candidate = available[Math.floor(Math.random() * available.length)];
-        break;
+  const subject = currentQ._subject || currentQ.subject || state.lastSubjects[0];
+  const chapterId = currentQ._chapterId || currentQ.chapter;
+  const currentIds = new Set(currentList.map((q) => String(q.id)));
+
+  toast('একই বিষয় ও অধ্যায় থেকে প্রশ্ন খোঁজা হচ্ছে...', false);
+
+  try {
+    let pool = [];
+    // 1. Try to load or get from exact subject & chapter
+    if (subject && chapterId) {
+      const data = await loadChapter(subject, chapterId, type);
+      if (Array.isArray(data)) {
+        pool = data.filter(type === 'mcq' ? isValidMcq : isValidCq).map(q => ({ ...q, _subject: subject, _chapterId: chapterId }));
       }
     }
 
-    if (candidate) {
-      state.lastMcqs[index] = candidate;
-      renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
-      toast(`প্রশ্ন #${toBn(index + 1)} নতুন প্রশ্ন দ্বারা পরিবর্তন করা হয়েছে`);
-    } else {
-      toast('অন্য কোনো প্রশ্ন পাওয়া যায়নি', true);
-    }
-  } else if (type === 'cq') {
-    const currentQ = state.lastCqs[index];
-    if (!currentQ) return;
-    const currentIds = new Set(state.lastCqs.map((q) => String(q.id)));
+    // Filter available candidates from exact chapter
+    let candidates = pool.filter((q) => !currentIds.has(String(q.id)));
 
-    let candidate = null;
-    for (const [key, val] of state.cache.entries()) {
-      const pool = Array.isArray(val) ? val : (val.cqs || []);
-      const available = pool.filter((q) => q && !currentIds.has(String(q.id)));
-      if (available.length) {
-        candidate = available[Math.floor(Math.random() * available.length)];
-        break;
+    // 2. If exact chapter is exhausted, try other chapters of the same subject
+    if (!candidates.length && subject && state.meta?.[subject]?.chapters) {
+      const chapters = state.meta[subject].chapters;
+      for (const ch of chapters) {
+        if (ch.id === chapterId) continue;
+        try {
+          const data = await loadChapter(subject, ch.id, type);
+          if (Array.isArray(data)) {
+            const extra = data.filter(type === 'mcq' ? isValidMcq : isValidCq).map(q => ({ ...q, _subject: subject, _chapterId: ch.id }))
+              .filter(q => !currentIds.has(String(q.id)));
+            if (extra.length) {
+              candidates = extra;
+              break;
+            }
+          }
+        } catch (_) {}
       }
     }
 
-    if (candidate) {
-      state.lastCqs[index] = candidate;
+    if (candidates.length) {
+      const picked = candidates[Math.floor(Math.random() * candidates.length)];
+      currentList[index] = picked;
       renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
-      toast(`সৃজনশীল #${toBn(index + 1)} পরিবর্তন করা হয়েছে`);
+      toast(`প্রশ্ন #${toBn(index + 1)} একই অধ্যায় থেকে সফলভাবে পরিবর্তন করা হয়েছে! 🔄`);
     } else {
-      toast('অন্য কোনো সৃজনশীল প্রশ্ন পাওয়া যায়নি', true);
+      toast('এই অধ্যায়ে পরিবর্তন করার মতো কোনো বাড়তি প্রশ্ন পাওয়া যায়নি', true);
     }
+  } catch (err) {
+    console.error(err);
+    toast('প্রশ্ন লোড করতে সমস্যা হয়েছে', true);
   }
 };
 
@@ -1694,12 +1753,12 @@ window.deleteQuestion = function(type, index) {
     state.lastMcqs.splice(index, 1);
     renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
     $('previewStatus').textContent = `তৈরি হয়েছে: ${toBn(state.lastMcqs.length)} MCQ · ${toBn(state.lastCqs.length)} CQ`;
-    toast(`প্রশ্ন #${toBn(index + 1)} বাদ দেওয়া হয়েছে`);
+    toast(`প্রশ্ন #${toBn(index + 1)} বাদ দেওয়া হয়েছে ✕`);
   } else if (type === 'cq') {
     state.lastCqs.splice(index, 1);
     renderPaper(state.lastMcqs, state.lastCqs, readSettings(), state.lastSubjects);
     $('previewStatus').textContent = `তৈরি হয়েছে: ${toBn(state.lastMcqs.length)} MCQ · ${toBn(state.lastCqs.length)} CQ`;
-    toast(`সৃজনশীল #${toBn(index + 1)} বাদ দেওয়া হয়েছে`);
+    toast(`সৃজনশীল #${toBn(index + 1)} বাদ দেওয়া হয়েছে ✕`);
   }
 };
 

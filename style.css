@@ -866,6 +866,59 @@ body.picker-open { overflow: hidden; }
   object-fit: contain;
 }
 
+/* ---------- Watermark (জলছাপ) ---------- */
+.paper {
+  position: relative;
+}
+
+.paper-watermark {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-28deg);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  text-align: center;
+  max-width: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paper-watermark-text {
+  font-size: 42pt;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.045);
+  letter-spacing: 2px;
+  line-height: 1.25;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+
+.paper-watermark-img {
+  max-height: 240px;
+  max-width: 320px;
+  opacity: 0.05;
+  filter: grayscale(100%);
+  object-fit: contain;
+}
+
+/* ---------- MCQ Inline Options View (পাশাপাশি ৪টি অপশন) ---------- */
+.options.inline-layout {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px 14px !important;
+  margin-top: 2px !important;
+  grid-template-columns: none !important;
+}
+
+.options.inline-layout .option {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  margin-right: 6px !important;
+}
+
 /* ---------- Compact Mode ---------- */
 .paper.compact-mode {
   font-size: 8.5pt !important;

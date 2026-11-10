@@ -140,9 +140,16 @@
         </label>
         <label class="field">
           <span>লোগো (ঐচ্ছিক)</span>
-          <input type="file" id="institutionLogo" accept="image/*">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="file" id="institutionLogo" accept="image/*" style="flex:1;">
+            <button type="button" class="tool-btn" id="removeLogoBtn" title="লোগো মুছুন" style="display:none; padding:4px 8px; font-size:0.78rem; color:#dc2626;">✕ মুছুন</button>
+          </div>
         </label>
       </div>
+      <label class="toggle-row">
+        <input type="checkbox" id="showWatermark">
+        <span>প্রতিষ্ঠানের হালকা জলছাপ (Watermark) দেখাও</span>
+      </label>
       <div class="two-fields">
         <label class="field">
           <span>সময়</span>
@@ -164,13 +171,26 @@
         <span class="step-badge">৪</span>
         <div>
           <h2>অপশন</h2>
-          <p>উত্তরপত্র ও উৎস</p>
+          <p>উত্তরপত্র, বিন্যাস ও উৎস</p>
         </div>
       </div>
       <label class="toggle-row">
         <input type="checkbox" id="compactMode">
-        <span>কমপ্যাক্ট মোড (১-২ পৃষ্ঠায় ফিট / পৃষ্ঠা সাশ্রয়ী)</span>
+        <span>কমপ্যাক্ট লেআউট (১-২ পৃষ্ঠায় ফিট / পৃষ্ঠা সাশ্রয়ী)</span>
       </label>
+      <div class="field" style="margin: 8px 0;">
+        <span>MCQ অপশন বিন্যাস:</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+          <label class="scope-option" style="padding: 7px 10px; margin: 0;">
+            <input type="radio" name="optionsLayout" value="grid" checked>
+            <span><strong style="font-size: 0.82rem;">২-কলাম (গ্রিড)</strong></span>
+          </label>
+          <label class="scope-option" style="padding: 7px 10px; margin: 0;">
+            <input type="radio" name="optionsLayout" value="inline">
+            <span><strong style="font-size: 0.82rem;">পাশাপাশি ৪টি অপশন</strong></span>
+          </label>
+        </div>
+      </div>
       <label class="toggle-row">
         <input type="checkbox" id="showOmrSheet">
         <span>খালি OMR উত্তরপত্র শিট প্রিন্ট করুন</span>

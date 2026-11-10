@@ -1,0 +1,54 @@
+{
+  "name": "lumen-paper-maker",
+  "version": "1.0.0",
+  "description": "HSC MCQ + CQ Question Paper Maker - LUMEN",
+  "productName": "LUMEN Paper Maker",
+  "main": "dist/electron/main.js",
+  "scripts": {
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder build",
+    "start": "electron ."
+  },
+  "keywords": [
+    "hsc",
+    "question-paper",
+    "mcq",
+    "cq",
+    "bangla",
+    "education"
+  ],
+  "author": "LUMEN Paper Maker",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/lumen-paper-maker.git"
+  },
+  "homepage": ".",
+  "build": {
+    "appId": "com.lumen.papermaker",
+    "productName": "LUMEN Paper Maker",
+    "files": [
+      "index.html",
+      "style.css",
+      "app.js",
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "exe"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.3"
+  }
+}

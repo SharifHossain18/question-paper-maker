@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#10233f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LUMEN Maker">
+<meta name="description" content="HSC বিজ্ঞান ও সাধারণ বিষয়ের MCQ এবং সৃজনশীল প্রশ্নপত্র তৈরি করুন">
+<title>LUMEN Paper Maker — HSC MCQ + CQ প্রশ্নপত্র</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+<header class="topbar no-print">
+  <div class="brand">
+    <div class="brand-mark"><span>L</span></div>
+    <div>
+      <h1>LUMEN Paper Maker</h1>
+      <p>HSC MCQ + সৃজনশীল প্রশ্নপত্র তৈরি করুন</p>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button type="button" class="install-pwa-btn hidden" id="installPwaBtn" title="মোবাইল বা পিসিতে অ্যাপ ইনস্টল করুন">
+      <span>📲</span>
+      <span>অ্যাপ ইনস্টল</span>
+    </button>
+    <div class="topbar-note">Data source: LUMEN question bank</div>
+  </div>
+</header>
+
+<nav class="mobile-nav no-print" id="mobileNav">
+  <button type="button" class="mobile-tab-btn active" id="tabControlsBtn">⚙️ বিষয় ও প্রশ্ন নির্বাচন</button>
+  <button type="button" class="mobile-tab-btn" id="tabPreviewBtn">📄 প্রশ্নপত্র প্রিভিউ</button>
+</nav>
+
+<main class="layout">
+  <aside class="controls no-print" id="controlsPanel">
+    <section class="control-card">
+      <div class="card-head">
+        <span class="step-badge">১</span>
+        <div>
+          <h2>বিষয় ও অধ্যapter</h2>
+          <p>যেকোনো বিষয় বেছে নিন</p>
+        </div>
+      </div>
+
+      <div class="scope-switch">
+        <label class="scope-option">
+          <input type="radio" name="scope" value="random" checked>
+          <span>
+            <strong>Random mix</strong>
+            <small>নির্বাচিত বিষয় থেকেellemoleo adhyaya</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input type="radio" name="scope" value="chapters">
+          <span>
+            <strong>নির্দিষ্ট অধ্যapter</strong>
+            <small>নিজে adhyapter বেছে নিন</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input type="radio" name="scope" value="pick">
+          <span>
+            <strong>নিজে প্রশ্ন বাছাই</strong>
+            <small>ডাটাবেজ থেকে প্রশ্ন দেখে বেছে নিন</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="mini-actions">
+        <button type="button" class="link-btn" id="selectAllBtn">সব বিষয় নির্বাচন</button>
+        <button type="button" class="link-btn muted" id="clearAllBtn">সব বাদ দিন</button>
+      </div>
+
+      <div id="subjectList" class="subject-list">
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+
+      <div id="pickInfo" class="pick-info">
+        <p>ডাটাবেজ থেকে নিজে MCQ ও CQ বেছে নিন। বিভিন্ন বিষয়/অধ্যapter মিশিয়ে একটি প্রশ্নপত্র তৈরি করা যাবে।</p>
+        <div class="pick-info-row">
+          <span id="pickInfoCount">নির্বাচিত: ০ MCQ · ০ CQ</span>
+          <button type="button" class="link-btn muted" id="clearPicksBtn" disabled>সব বাদ</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="control-card" id="countCard">
+      <div class="card-head">
+        <span class="step-badge">২</span>
+        <div>
+          <h2>প্রশ্ন সংখ্যা</h2>
+          <p>MCQ ও CQ কতটি চান</p>
+        </div>
+      </div>
+      <div class="count-grid">
+        <label class="count-box">
+          <span>MCQ</span>
+          <input type="number" id="mcqCount" value="30" min="0" max="200" step="1">
+        </label>
+        <label class="count-box">
+          <span>CQ</span>
+          <input type="number" id="cqCount" value="5" min="0" max="30" step="1">
+        </label>
+      </div>
+      <p class="hint">প্রতি MCQ = ১ নম্বর · প্রতি CQ = ১০ নম্বর</p>
+    </section>
+
+    <section class="control-card">
+      <div class="card-head">
+        <span class="step-badge">৩</span>
+        <div>
+          <h2>প্রশ্নপত্রের তথ্য</h2>
+          <p>প্রিন্টে যা দেখা যাবে</p>
+        </div>
+      </div>
+      <label class="field">
+        <span>শিরোনাম</span>
+        <input type="text" id="paperTitle" value="HSC বিজ্ঞান — MCQ ও সৃজনশীল প্রশ্নপত্র">
+      </label>
+      <label class="field">
+        <span>প্রতিষ্ঠানের নাম (ঐচ্ছিক)</span>
+        <input type="text" id="institution" placeholder="যেমন: শহীদ স্মৃতি কলেজ">
+      </label>
+      <div class="two-fields">
+        <label class="field">
+          <span>সময়</span>
+          <input type="text" id="examTime" value="৩ ঘণ্টা">
+        </label>
+        <label class="field">
+          <span>সেট</span>
+          <input type="text" id="paperSet" value="Set A">
+        </label>
+      </div>
+      <label class="field">
+        <span>নির্দেশনা</span>
+        <textarea id="instructions" rows="3">সকল প্রশ্নের উত্তর দাও। বহুনির্বাচনি প্রশ্নে সঠিক উত্তরটি নির্বাচন করো। সৃজনশীল প্রশ্নের প্রতিটি অংশের উত্তর দাও।</textarea>
+      </label>
+    </section>
+
+    <section class="control-card">
+      <div class="card-head">
+        <span class="step-badge">৪</span>
+        <div>
+          <h2>অপশন</h2>
+          <p>উত্তরপত্র ও উৎস</p>
+        </div>
+      </div>
+      <label class="toggle-row">
+        <input type="checkbox" id="showMcqKey" checked>
+        <span>MCQ উত্তরপত্র দেখাও</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="showMcqExplanation">
+        <span>MCQ ব্যাখ্যা দেখাও</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="showCqAnswers">
+        <span>CQ উত্তর দেখাও</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="showSource">
+        <span>প্রশ্নের উৎস (বোর্ড/সাল) দেখাও</span>
+      </label>
+    </section>
+
+    <button type="button" class="generate-btn" id="generateBtn">
+      <span>প্রশ্নপত্র তৈরি করুন</span>
+      <small>Generate paper</small>
+    </button>
+    <p class="source-note">ডেটা সরাসরি LUMEN প্রশ্নব্যাংক থেকে লোড হয়। প্রথমবার কিছু ফাইল ডাউনলোড হতে সময় লাগতে পারে।</p>
+  </aside>
+
+  <section class="preview-area" id="previewPanel">
+    <div class="preview-toolbar no-print">
+      <div class="preview-status" id="previewStatus">বিষয় নির্বাচন করে “প্রশ্নপত্র তৈরি করুন” চাপুন</div>
+      <div class="preview-actions">
+        <button type="button" class="tool-btn" id="regenerateBtn" disabled>আবার তৈরি</button>
+        <button type="button" class="tool-btn primary" id="printBtn" disabled>প্রিন্ট / PDF</button>
+      </div>
+    </div>
+
+    <div class="paper" id="paper">
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h2>তৈরি করার জন্য প্রস্তুত</h2>
+        <p>বাম দিক থেকে বিষয়, MCQ/CQ সংখ্যা ও অপশন বেছে নিন।<br>তারপর <strong>প্রশ্নপत्र তৈরি করুন</strong> চাপুন।</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="picker-overlay hidden" id="pickerOverlay">
+  <div class="picker">
+    <header class="picker-head">
+      <div>
+        <h2> প্রশ্ন বাছাই</h2>
+        <p>ডাটাবেজ থেকে প্রশ্ন দেখে টিক দিন</p>
+      </div>
+      <button type="button" class="picker-close" id="pickerCloseBtn" aria-label="বন্ধ করুন">✕</button>
+    </header>
+
+    <div class="picker-controls">
+      <label class="pick-field">
+        <span>বিষয়</span>
+        <select id="pickSubject"></select>
+      </label>
+      <label class="pick-field">
+        <span>অধ্যapter</span>
+        <select id="pickChapter"></select>
+      </label>
+      <div class="pick-type-tabs" id="pickTypeTabs">
+        <button type="button" data-type="mcq" class="active">MCQ</button>
+        <button type="button" data-type="cq">CQ</button>
+        <button type="button" data-type="all">সব</button>
+      </div>
+      <label class="pick-field pick-search-field">
+        <span>খুঁজুন</span>
+        <input type="search" id="pickSearch" placeholder="প্রশ্ন, অপশন বা শব্দ লিখুন...">
+      </label>
+      <label class="pick-toggle"><input type="checkbox" id="pickShowAnswer"> উত্তর দেখাও</label>
+      <label class="pick-toggle"><input type="checkbox" id="pickSelectedOnly"> শুধু নির্বাচিত</label>
+    </div>
+
+    <div class="picker-body">
+      <div id="pickList" class="pick-list"></div>
+    </div>
+
+    <footer class="picker-foot">
+      <div class="pick-summary">
+        <strong id="pickCount">নির্বাচিত: ০ MCQ · ০ CQ</strong>
+        <button type="button" class="link-btn muted" id="pickClearBtn" disabled>সব বাদ</button>
+      </div>
+      <button type="button" class="tool-btn primary pick-generate-btn" id="pickGenerateBtn" disabled>
+        নির্বাচিত প্রশ্ন দিয়ে প্রশ্নপত্র তৈরি
+      </button>
+    </footer>
+  </div>
+</div>
+
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loader-card">
+    <div class="spinner"></div>
+    <h3 id="loadingTitle">প্রশ্নব্যাংক লোড হচ্ছে...</h3>
+    <p id="loadingSub">একটু অপেক্ষা করুন</p>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <button type="button" class="tool-btn" id="cancelBtn">বাতিল করুন</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="ios-modal hidden" id="iosModal">
+  <div class="ios-modal-card">
+    <button type="button" class="picker-close" id="iosModalClose" aria-label="বন্ধ করুন">✕</button>
+    <div class="ios-modal-icon">📲</div>
+    <h3>ফোনে অ্যাপ ইনস্টল করুন</h3>
+    <p>ইন্টারনেট ছাড়াও সহজে ব্যবহার করতে অ্যাপটি আপনার হোম স্ক্রিনে যুক্ত করুন:</p>
+    <ol class="ios-steps">
+      <li>Safari ব্রাউজারের নিচে <strong>Share (শেয়ার)</strong> আইকনে চাপুন।</li>
+      <li>নিচের দিকে স্ক্রল করে <strong>Add to Home Screen</strong> চাপুন।</li>
+      <li>উপরে ডানে <strong>Add</strong> চাপলেই অ্যাপটি ফোনে সেভ হয়ে যাবে!</li>
+    </ol>
+    <button type="button" class="tool-btn primary" id="iosModalOk" style="width:100%; justify-content:center; padding:10px;">ঠিক আছে</button>
+  </div>
+</div>
+
+<script defer src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js')
+        .then(function (reg) {
+          reg.onupdatefound = function () {
+            var installing = reg.installing;
+            if (installing) {
+              installing.onstatechange = function () {
+                if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('নতুন আপডেট পাওয়া গেছে!');
+                }
+              };
+            }
+          };
+        })
+        .catch(function (err) {
+          console.warn('SW registration skipped:', err);
+        });
+    });
+  }
+</script>
+</body>
+</html>

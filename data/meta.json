@@ -1,0 +1,69 @@
+{
+  "Physics 1st Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: বদলে বদলে অ cambiado", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: গতivotরotion", "mcq": 8, "cq": 2 },
+      { "id": "ch3", "name": "Chapter 3: Lists", "mcq": 12, "cq": 4 }
+    ]
+  },
+  "Physics 2nd Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Optics", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Modern Physics", "mcq": 8, "cq": 2 }
+    ]
+  },
+  "Chemistry 1st Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Atoms", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Molecules", "mcq": 8, "cq": 2 }
+    ]
+  },
+  "Chemistry 2nd Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Chemical Bonding", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Solutions", "mcq": 8, "cq": 2 }
+    ]
+  },
+  "Math 1st Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Algebra", "mcq": 15, "cq": 5 },
+      { "id": "ch2", "name": "Chapter 2: Geometry", "mcq": 12, "cq": 4 }
+    ]
+  },
+  "Math 2nd Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Calculus", "mcq": 15, "cq": 5 },
+      { "id": "ch2", "name": "Chapter 2: Vectors", "mcq": 10, "cq": 3 }
+    ]
+  },
+  "Biology 1st Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Cell Biology", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Genetics", "mcq": 8, "cq": 2 }
+    ]
+  },
+  "Biology 2nd Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Evolution", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Ecology", "mcq": 8, "cq": 2 }
+    ]
+  },
+  "ICT": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Hardware", "mcq": 12, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Software", "mcq": 10, "cq": 2 }
+    ]
+  },
+  "Bangla 1st Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: literature", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Grammar", "mcq": 8, "cq": 2 }
+    ]
+  },
+  "Bangla 2nd Paper": {
+    "chapters": [
+      { "id": "ch1", "name": "Chapter 1: Creative Writing", "mcq": 10, "cq": 3 },
+      { "id": "ch2", "name": "Chapter 2: Classical Literature", "mcq": 8, "cq": 2 }
+    ]
+  }
+}
